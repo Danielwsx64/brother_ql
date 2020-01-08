@@ -1,0 +1,46 @@
+from brother_ql.conversion import convert
+from brother_ql.backends.helpers import send
+from brother_ql.raster import BrotherQLRaster
+
+import logging, time
+from brother_ql.backends import backend_factory
+from brother_ql.reader import interpret_response
+
+logger = logging.getLogger(__name__)
+
+backend = 'pyusb'
+model = 'QL-810W'
+printer = 'usb://0x04f9:0x209c'
+
+qlr = BrotherQLRaster(model)
+qlr.exception_on_warning = True
+kwargs = { "cut": True }
+label = '62'
+
+images = ['/tmp/1578489891746.jpg']
+instructions = convert(qlr=qlr, images=images, label=label, **kwargs)
+
+
+
+be = backend_factory(backend)
+BrotherQLBackend = be['backend_class']
+printer = BrotherQLBackend(printer)
+
+printer.write(instructions)
+
+start = time.time()
+
+while time.time() - start < 10:
+    data = printer.read()
+    print(data)
+    if not data:
+        time.sleep(0.005)
+        continue
+    try:
+        result = interpret_response(data)
+        print(result)
+        print('\n\n==========================')
+    except ValueError:
+        logger.error("TIME %.3f - Couln't understand response: %s", time.time()-start, data)
+        continue
+# send(instructions=instructions, printer_identifier=printer, backend_identifier=backend, blocking=True)
