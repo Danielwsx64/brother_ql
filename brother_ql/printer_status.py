@@ -5,10 +5,10 @@ from brother_ql.raster import BrotherQLRaster
 
 logger = logging.getLogger(__name__)
 
-def get_status(backend, model, printer_name):
+def status(backend, model, printer_name):
     be = backend_factory(backend)
     BrotherQLBackend = be['backend_class']
-    printer = False
+    printer = None
 
     try:
         printer = BrotherQLBackend(printer_name)
@@ -48,6 +48,3 @@ def get_status(backend, model, printer_name):
     else:
         print('Error: could not fetch printer status')
         sys.exit(2)
-
-
-# status('linux_kernel', 'QL-810W', 'file:///dev/usb/lp0')

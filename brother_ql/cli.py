@@ -10,11 +10,8 @@ import click
 # imports from this very package
 from brother_ql.devicedependent import models, label_sizes, label_type_specs, DIE_CUT_LABEL, ENDLESS_LABEL, ROUND_DIE_CUT_LABEL
 from brother_ql.backends import available_backends, backend_factory
-from brother_ql.printer_status import get_status
-
 
 logger = logging.getLogger('brother_ql')
-
 
 printer_help = "The identifier for the printer. This could be a string like tcp://192.168.1.21:9100 for a networked printer or usb://0x04f9:0x2015/000M6Z401370 for a printer connected via USB."
 @click.group()
@@ -54,15 +51,17 @@ def discover_and_list_available_devices(backend):
     log_discovered_devices(available_devices)
     print(textual_description_discovered_devices(available_devices))
 
-@cli.command()
+@cli.command('status')
 @click.pass_context
-def status(ctx):
+def status_cmd(ctx):
     """ return printer status """
+    from brother_ql.printer_status import status
+
     model = ctx.meta['MODEL']
     backend = ctx.meta['BACKEND']
     printer = ctx.meta['PRINTER']
 
-    get_status(backend, model, printer)
+    status(backend, model, printer)
 
 @cli.group()
 @click.pass_context
@@ -141,6 +140,7 @@ def env(ctx, *args, **kwargs):
 @click.option('--600dpi', 'dpi_600', is_flag=True, help='Print with 600x300 dpi available on some models. Provide your image as 600x600 dpi; perpendicular to the feeding the image will be resized to 300dpi.')
 @click.option('--lq', is_flag=True, help='Print with low quality (faster). Default is high quality.')
 @click.option('--no-cut', is_flag=True, help="Don't cut the tape after printing the label.")
+@click.option('--rasp', is_flag=True, help="Use raspberry printer method")
 @click.pass_context
 def print_cmd(ctx, *args, **kwargs):
     """ Print a label of the provided IMAGE. """
@@ -150,12 +150,18 @@ def print_cmd(ctx, *args, **kwargs):
     from brother_ql.conversion import convert
     from brother_ql.backends.helpers import send
     from brother_ql.raster import BrotherQLRaster
+    from brother_ql.rasp_print import r_print
+
     qlr = BrotherQLRaster(model)
     qlr.exception_on_warning = True
     kwargs['cut'] = not kwargs['no_cut']
     del kwargs['no_cut']
     instructions = convert(qlr=qlr, **kwargs)
-    send(instructions=instructions, printer_identifier=printer, backend_identifier=backend, blocking=True)
+
+    if(kwargs['rasp']):
+        r_print(instructions=instructions, printer_identifier=printer, backend_identifier=backend)
+    else:
+        send(instructions=instructions, printer_identifier=printer, backend_identifier=backend, blocking=True)
 
 @cli.command(name='analyze', help='interpret a binary file containing raster instructions for the Brother QL-Series printers')
 @click.argument('instructions', type=click.File('rb'))
