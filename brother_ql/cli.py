@@ -10,6 +10,7 @@ import click
 # imports from this very package
 from brother_ql.devicedependent import models, label_sizes, label_type_specs, DIE_CUT_LABEL, ENDLESS_LABEL, ROUND_DIE_CUT_LABEL
 from brother_ql.backends import available_backends, backend_factory
+from brother_ql.printer_status import get_status
 
 
 logger = logging.getLogger('brother_ql')
@@ -52,6 +53,16 @@ def discover_and_list_available_devices(backend):
     from brother_ql.output_helpers import log_discovered_devices, textual_description_discovered_devices
     log_discovered_devices(available_devices)
     print(textual_description_discovered_devices(available_devices))
+
+@cli.command()
+@click.pass_context
+def status(ctx):
+    """ return printer status """
+    model = ctx.meta['MODEL']
+    backend = ctx.meta['BACKEND']
+    printer = ctx.meta['PRINTER']
+
+    get_status(backend, model, printer)
 
 @cli.group()
 @click.pass_context
