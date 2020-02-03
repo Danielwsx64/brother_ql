@@ -4,7 +4,7 @@ from brother_ql.reader import interpret_response
 
 logger = logging.getLogger(__name__)
 
-def r_print(instructions, printer_identifier, backend_identifier):
+def r_print(instructions, printer_identifier, backend_identifier, timeout):
     be = backend_factory(backend_identifier)
     BrotherQLBackend = be['backend_class']
     printer = None
@@ -18,7 +18,7 @@ def r_print(instructions, printer_identifier, backend_identifier):
     start = time.time()
     printer.write(instructions)
 
-    while time.time() - start < 10:
+    while time.time() - start < timeout:
         data = printer.read()
         if not data:
             time.sleep(0.005)
