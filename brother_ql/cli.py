@@ -159,7 +159,7 @@ def print_cmd(ctx, *args, **kwargs):
     instructions = convert(qlr=qlr, **kwargs)
 
     if(kwargs['rasp']):
-        timeout = ( len(kwargs['images']) * 1.5 ) + 5
+        timeout = ( len(kwargs['images']) * 5 ) + 10
 
         r_print(instructions=instructions, printer_identifier=printer,
                 backend_identifier=backend, timeout=timeout)
